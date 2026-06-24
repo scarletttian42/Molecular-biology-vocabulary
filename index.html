@@ -1,0 +1,500 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>专业名词中英互译刷题｜带错题本</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: system-ui, -apple-system, sans-serif;
+        }
+        body {
+            max-width: 850px;
+            margin: 40px auto;
+            padding: 0 20px;
+            background: #f7f9fc;
+        }
+        .control-box {
+            margin-bottom: 30px;
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+        button {
+            padding: 10px 16px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 15px;
+            transition: opacity 0.2s;
+        }
+        button:hover {opacity:0.9}
+        .mode-cn {background: #3b82f6; color: white;}
+        .mode-en {background: #10b981; color: white;}
+        .err-mode {background: #ef4444; color: white;}
+        .next-btn {background: #6366f1; color: white;}
+        .check-btn {background: #f59e0b; color: white;}
+        .clear-err {background: #6b7280; color: white;}
+        .card {
+            background: white;
+            padding: 40px 30px;
+            border-radius: 14px;
+            box-shadow: 0 2px 14px #e2e8f0;
+        }
+        .question {
+            font-size: 26px;
+            margin-bottom: 26px;
+            min-height: 90px;
+            line-height: 1.5;
+        }
+        #userInput {
+            width: 100%;
+            padding: 15px;
+            font-size: 18px;
+            border: 1px solid #cbd5e1;
+            border-radius: 8px;
+            margin-bottom: 18px;
+        }
+        .ans-tip {
+            font-size: 17px;
+            margin-top: 12px;
+            display: none;
+        }
+        .right {color:#16a34a}
+        .wrong {color:#dc2626}
+        .stat {
+            margin-top: 24px;
+            color: #475569;
+            line-height: 1.8;
+        }
+    </style>
+</head>
+<body>
+    <div class="control-box">
+        <button class="mode-cn" id="modeCn">普通模式：中译英</button>
+        <button class="mode-en" id="modeEn">普通模式：英译中</button>
+        <button class="err-mode" id="errMode">错题本刷题</button>
+        <button class="next-btn" id="nextBtn">下一题</button>
+        <button class="clear-err" id="clearErr">清空所有错题</button>
+    </div>
+
+    <div class="card">
+        <div class="question" id="qText">请先选择刷题模式开始练习</div>
+        <input type="text" id="userInput" placeholder="在此输入你的翻译答案">
+        <button class="check-btn" id="checkBtn">核对答案</button>
+        <div class="ans-tip" id="ansTip"></div>
+    </div>
+
+    <div class="stat">
+        <div>已完成题目：<span id="doneCount">0</span></div>
+        <div>当前错题总数：<span id="errCount">0</span></div>
+    </div>
+
+<script>
+// ============ 在这里替换成你的专业名词库 ============
+const wordList = [
+    {cn:"组蛋白乙酰转移酶", en:"HAT (histone acetyltransferase)"},
+    {cn:"乙酰基转移酶", en:"acetylase"},
+    {cn:"TATA盒结合蛋白", en:"TBP (TATA-box binding protein)"},
+    {cn:"DNA甲基转移酶", en:"DNMT"},
+    {cn:"S-腺苷甲硫氨酸", en:"SAM (S-adenosylmethionine)"},
+    {cn:"TBP相关因子", en:"TAFs (TBP-associated factors)"},
+    {cn:"同源重组", en:"homologous recombination"},
+    {cn:"组蛋白去乙酰化酶", en:"HDAC (histone deacetylase)"},
+    {cn:"CpG岛", en:"CpG islands"},
+    {cn:"DNA结合结构域与抑制结构域", en:"DBD and RD (DNA binding and repressor domains)"},
+    {cn:"上游调控序列1", en:"URS1 (upstream regulatory sequence)"},
+    {cn:"甲基化", en:"methylation"},
+    {cn:"乙酰化", en:"acetylation"},
+    {cn:"磷酸化", en:"phosphorylation"},
+    {cn:"泛素化", en:"ubiquitylation"},
+    {cn:"SUMO化", en:"sumoylation"},
+    {cn:"ADP核糖基化", en:"ADP-ribosylation"},
+    {cn:"染色体", en:"chromosome"},
+    {cn:"异源二聚体核受体", en:"HNR (heterodimeric nuclear receptors)"},
+    {cn:"同源二聚体核受体", en:"homodimeric nuclear receptors"},
+    {cn:"拟核", en:"nucleoid"},
+    {cn:"衣壳", en:"capsid"},
+    {cn:"甲基CpG结合蛋白", en:"methyl-CpG-binding protein"},
+    {cn:"DNA甲基化酶I", en:"DNA methyltransferase I"},
+    {cn:"蛋白激酶", en:"protein kinase"},
+    {cn:"蛋白磷酸酶", en:"protein phosphatase"},
+    {cn:"成核中心", en:"nucleation center"},
+    {cn:"末端酶", en:"terminase"},
+    {cn:"拟核相关蛋白", en:"nucleoid-associated proteins"},
+    {cn:"细菌凝聚蛋白复合物", en:"bacterial condensin complexes"},
+    {cn:"宏域", en:"macrodomains"},
+    {cn:"DNA缺刻", en:"nick"},
+    {cn:"核小体", en:"nucleosome"},
+    {cn:"核糖核蛋白酶", en:"ribonucleoprotein Enzyme"},
+    {cn:"染色质", en:"chromatin"},
+    {cn:"基质附着区", en:"matrix attachment regions (MARs)"},
+    {cn:"常染色质", en:"euchromatin"},
+    {cn:"异染色质", en:"heterochromatin"},
+    {cn:"组成型异染色质", en:"constitutive heterochromatin"},
+    {cn:"着丝粒", en:"kinetochore"},
+    {cn:"纺锤体", en:"spindle"},
+    {cn:"微管形成区", en:"microtubule organizing center (MTOC)"},
+    {cn:"着丝点", en:"kinetochores"},
+    {cn:"组蛋白", en:"histone"},
+    {cn:"互补DNA", en:"cDNA"},
+    {cn:"cDNA文库", en:"cDNA library"},
+    {cn:"基因组文库", en:"genomic library"},
+    {cn:"DNA文库", en:"DNA library"},
+    {cn:"多克隆位点", en:"MCS (Multiple cloning site)"},
+    {cn:"自主复制序列", en:"ARS (autonomous replicating sequence)"},
+    {cn:"异丙基硫代半乳糖苷", en:"IPTG (isopropylthiogalactoside)"},
+    {cn:"肠激酶", en:"enterokinase"},
+    {cn:"冠瘿碱", en:"opine"},
+    {cn:"乙酰丁香酮", en:"AS (acetosyringone)"},
+    {cn:"目标基因/报告基因", en:"GOI (gene of interest)"},
+    {cn:"生物素", en:"biotin"},
+    {cn:"卫星DNA", en:"satellite DNA"},
+    {cn:"DNA指纹识别", en:"DNA fingerprinting"},
+    {cn:"小卫星DNA", en:"minisatellite DNA"},
+    {cn:"微卫星DNA", en:"microsatellite DNA"},
+    {cn:"简单序列重复", en:"SSR (simple sequence repeat)"},
+    {cn:"短串联重复序列", en:"STR (short tandem repeat)"},
+    {cn:"DNA原位杂交", en:"in situ DNA hybridization"},
+    {cn:"RNA原位杂交", en:"in situ RNA hybridization"},
+    {cn:"短串联重复序列", en:"short tandem repeat (STR)"},
+    {cn:"裂解扩增多态序列", en:"CAPS (cleaved amplified polymorphic sequence)"},
+    {cn:"衍生裂解扩增多态序列", en:"dCAPS (derived cleaved amplified polymorphic sequence)"},
+    {cn:"双脱氧末端终止法", en:"sanger dideoxy sequencing"},
+    {cn:"罗氏454焦磷酸测序", en:"roche 454 pyrophosphate sequencing"},
+    {cn:"单链DNA结合蛋白", en:"SSBP (single-strand DNA-binding protein)"},
+    {cn:"解旋酶", en:"helicase"},
+    {cn:"真核生物", en:"eukaryotes"},
+    {cn:"拓扑异构酶", en:"topoisomerase"},
+    {cn:"DNA回旋酶", en:"DNA gyrase"},
+    {cn:"DNA聚合酶", en:"DNA polymerase"},
+    {cn:"端粒", en:"telomeres"},
+    {cn:"端粒酶", en:"telomerases"},
+    {cn:"复制子", en:"replicon"},
+    {cn:"复制起始位点", en:"ORI (origin of replication)"},
+    {cn:"启动子", en:"promoter"},
+    {cn:"终止子", en:"terminator"},
+    {cn:"双向复制", en:"bidirectional replication"},
+    {cn:"单向复制", en:"unidirectional replication"},
+    {cn:"滚环复制", en:"rolling circle replication"},
+    {cn:"β-葡萄糖苷酸酶", en:"GUS (uidA; β-glucuronidase)"},
+    {cn:"荧光素酶", en:"luc (luciferase)"},
+    {cn:"绿色荧光蛋白", en:"GFP (green fluorescent protein)"},
+    {cn:"定量反转录PCR", en:"quantitative RT-PCR"},
+    {cn:"转录组学", en:"transcriptomics"},
+    {cn:"转录组测序", en:"RNA-Seq"},
+    {cn:"正向遗传学", en:"forward genetics"},
+    {cn:"反向遗传学", en:"reverse genetics"},
+    {cn:"基因敲除", en:"gene knock-out"},
+    {cn:"正负筛选法", en:"PNS"},
+    {cn:"RNA干涉", en:"RNAi (RNA interference)"},
+    {cn:"转录后基因沉默", en:"PTGS (post-transcriptional gene silencing)"},
+    {cn:"共抑制", en:"co-suppression"},
+    {cn:"双链RNA", en:"dsRNA"},
+    {cn:"RNA诱导沉默复合体", en:"RISC (RNA-induced silencing complex)"},
+    {cn:"Dicer酶", en:"dicer"},
+    {cn:"Ago2蛋白/剪切蛋白", en:"Ago2 (slicer)"},
+    {cn:"小干扰RNA", en:"siRNA (small interfering RNA)"},
+    {cn:"微小RNA", en:"miRNA (micro RNA)"},
+    {cn:"操纵元", en:"operon"},
+    {cn:"操纵区", en:"operator"},
+    {cn:"顺反子", en:"cistron"},
+    {cn:"多顺反子mRNA", en:"polycistronic message"},
+    {cn:"全酶", en:"holoenzyme"},
+    {cn:"荧光共振能量转移", en:"FRET (fluorescence resonance energy transfer)"},
+    {cn:"代谢分解物激活蛋白", en:"CAP"},
+    {cn:"环腺苷酸", en:"cAMP (cyclic-AMP)"},
+    {cn:"衰减子", en:"attenuator"},
+    {cn:"异质核RNA", en:"hnRNA (heterogeneous nuclear RNA)"},
+    {cn:"小核RNA", en:"snRNA (small nuclear RNA)"},
+    {cn:"非翻译区", en:"UTRs (untranslated regions)"},
+    {cn:"编码序列", en:"CDS (coding sequence)"},
+    {cn:"RNA剪接", en:"RNA splicing"},
+    {cn:"内含子", en:"intron"},
+    {cn:"外显子", en:"exon"},
+    {cn:"剪接体", en:"spliceosome"},
+    {cn:"小核核糖核蛋白", en:"SnRNP (small nuclear ribonucleoproteins)"},
+    {cn:"小核核糖核蛋白复合物(snRNA+蛋白质)", en:"snurp"},
+    {cn:"可变剪接", en:"alternative splicing"},
+    {cn:"自剪接RNA", en:"self splicing RNAs"},
+    {cn:"RNA连接酶", en:"RNA ligase"},
+    {cn:"聚腺苷酸化", en:"polyadenylation"},
+    {cn:"鸟苷酰基", en:"guanylyl"},
+    {cn:"腺苷甲硫氨酸", en:"AdoMet (adenosylmethionine)"},
+    {cn:"多聚腺苷酸聚合酶", en:"poly(A) polymerase"},
+    {cn:"非转录间隔区", en:"NTS (nontranscribed spacers)"},
+    {cn:"核仁小RNA", en:"snoRNA (small nucleolar RNA)"},
+    {cn:"核仁小核糖核蛋白", en:"snoRNP (small nucleolar ribonucleoprotein)"},
+    {cn:"多核苷酸磷酸化酶", en:"PNPase (polynucleotide phosphorylase)"},
+    {cn:"反式剪接", en:"trans-splicing"},
+    {cn:"向导RNA", en:"gRNA (guide RNA)"},
+    {cn:"脱帽酶", en:"DCP (decapping enzyme)"},
+    {cn:"Piwi相互作用RNA", en:"piRNA (piwi-interacting RNA)"},
+    {cn:"长链非编码RNA", en:"lncRNA (long non-coding RNA)"},
+    {cn:"环状RNA", en:"circRNA (circular RNA)"},
+    {cn:"正义RNA", en:"sense RNA"},
+    {cn:"反义RNA", en:"antisense RNA"},
+    {cn:"RNA依赖的RNA聚合酶", en:"RdRp (RNA-dependent RNA-polymerase)"},
+    {cn:"病毒诱导基因沉默", en:"VIGS (virus-induced gene silencing)"},
+    {cn:"富含AU元件", en:"ARE (AU-rich element)"},
+    {cn:"发夹RNA", en:"hpRNA"},
+    {cn:"P小体", en:"PBs (P-Bodies)"},
+    {cn:"起始因子", en:"IF (initiation factor)"},
+    {cn:"核糖体循环", en:"ribosome cycles"},
+    {cn:"多聚核糖体", en:"polysome / polyribosome"},
+    {cn:"反密码子", en:"anti-codon"},
+    {cn:"翻译起始前复合物", en:"preinitiation"},
+    {cn:"翻译起始阶段", en:"initiation"},
+    {cn:"翻译延伸阶段", en:"elongation"},
+    {cn:"翻译终止阶段", en:"termination"},
+    {cn:"翻译后修饰", en:"post-translational modification"},
+    {cn:"氨酰tRNA合成酶", en:"aminoacyl tRNA synthetases"},
+    {cn:"SD序列", en:"SD sequence (Shine-Dalgarno sequence)"},
+    {cn:"开放阅读框", en:"ORF (open reading frame)"},
+    {cn:"遗传密码子", en:"genetic Codons"},
+    {cn:"密码子偏好", en:"codon preference"},
+    {cn:"摆动假说", en:"wobble hypothesis"},
+    {cn:"摆动碱基对", en:"wobble base pair"},
+    {cn:"A位（氨酰位）", en:"A site (aminoacyl site)"},
+    {cn:"P位（肽基位）", en:"P site (peptide site)"},
+    {cn:"E位（排出位）", en:"E site (exit site)"},
+    {cn:"反馈抑制", en:"feed-back repression"},
+    {cn:"泛素", en:"ubiquitin"},
+    {cn:"羟化", en:"hydroxylation"},
+    {cn:"糖基化", en:"glycosylation"},
+    {cn:"锌指核酸酶", en:"ZFNs (zinc-finger nucleases)"},
+    {cn:"类转录激活因子效应物核酸酶", en:"TALENs (transcription activator-like effector nucleases)"},
+    {cn:"成簇规律间隔短回文重复序列", en:"CRISPR (clustered regulatory interspaced short palindromic repeats)"},
+    {cn:"CRISPR相关蛋白", en:"Cas (CRISPR associated proteins)"},
+    {cn:"CRISPR/Cas系统", en:"CRISPR/Cas"},
+    {cn:"前间隔序列邻近基序", en:"PAM (proto-spacer adjacent motif)"},
+    {cn:"CRISPR RNA", en:"crRNA"},
+    {cn:"反式激活crRNA", en:"tracrRNA"},
+    {cn:"DNA双链断裂", en:"DSB (double strand break)"},
+    {cn:"同源定向修复", en:"HDR (homologous recombination)"},
+    {cn:"非同源末端连接", en:"NHEJ (non-homologous end joining)"},
+    {cn:"插入缺失突变", en:"Indel (insertions or deletions)"},
+    {cn:"顺式元件", en:"cis-element"},
+    {cn:"中介因子复合体", en:"mediator"},
+    {cn:"凝胶迁移滞后实验", en:"EMSA (electromobility shift assays)"},
+    {cn:"染色质免疫共沉淀", en:"Chip (chromatin immuno precipitation)"},
+    {cn:"GST下拉实验", en:"GST pull down"},
+    {cn:"免疫共沉淀", en:"Co-IP (Co-immunoprecipitation)"},
+    {cn:"双分子荧光互补", en:"BiFC (bimolecular fluorescence complementation)"},
+    {cn:"功能基因组学", en:"functional genomics"},
+    {cn:"表型驱动研究策略", en:"phenotype driven approach"},
+    {cn:"基因驱动研究策略", en:"gene driven approach"},
+    {cn:"突变变体", en:"morphs"},
+    {cn:"生殖细胞", en:"germline"},
+    {cn:"同义突变", en:"synonymous mutation"},
+    {cn:"错义突变", en:"missense mutation"},
+    {cn:"无义突变/终止突变", en:"nonsense mutation"},
+    {cn:"连读突变", en:"readthrough mutation"},
+    {cn:"插入突变", en:"insertion mutation"},
+    {cn:"缺失突变", en:"deletion mutation"},
+    {cn:"复制滑移", en:"replication slippage"},
+    {cn:"转座子诱变", en:"transposon mutagenesis"},
+    {cn:"无效等位基因", en:"amorphs"},
+    {cn:"限制性片段长度多态性", en:"RFLP (restriction fragment length polymorphisms)"},
+    {cn:"密码子偏好", en:"codon bias"},
+    {cn:"简单序列长度多态性", en:"SSLP (simple sequence length polymorphism)"},
+    {cn:"序列标签位点", en:"STS (sequence tagged site)"},
+    {cn:"酶切扩增多态序列", en:"CAPS (cleaved amplified polymorphic sequence)"},
+    {cn:"衍生酶切扩增多态序列", en:"dCAPS (derived cleaved amplified polymorphic sequence)"},
+    {cn:"全基因组关联分析", en:"GWAS (genome-wide association study)"},
+    {cn:"单核苷酸多态性", en:"SNP"},
+    {cn:"定点突变", en:"site-directed mutagenesis"},
+    {cn:"囊胚", en:"blastocyst"},
+    {cn:"定向诱导基因组局部突变", en:"TILLING (targeted induced local lesions in genomes)"},
+    {cn:"蛋白质组学", en:"proteomics"},
+    {cn:"烷化修饰", en:"alkylation"},
+    {cn:"肽质量指纹图谱", en:"peptide mass fingerprint"},
+    {cn:"上游启动子元件", en:"UPE (upstream promoter element)"},
+    {cn:"顺式作用元件", en:"cis-acting elements"},
+    {cn:"增强子", en:"enhancer"},
+    {cn:"沉默子", en:"silencer"},
+    {cn:"反式作用因子", en:"trans-acting factors"},
+    {cn:"上游结合因子", en:"UBF (Upstream-binding factor / UAF)"},
+    {cn:"锌指结构", en:"zinc finger"},
+    {cn:"同源异型域", en:"homeodomains (HDs)"},
+    {cn:"螺旋-转角-螺旋", en:"helix-turn-helix"},
+    {cn:"bZip（亮氨酸拉链）", en:"bZip (leucine zipper)"},
+    {cn:"碱性螺旋-环-螺旋", en:"bHLH (basic helix-loop-helix)"},
+    {cn:"表观遗传学", en:"epigenetics"},
+    {cn:"硬式遗传", en:"hard inheritance"},
+    {cn:"软式遗传", en:"soft inheritance"},
+    {cn:"亲本效应", en:"parental effects"},
+    {cn:"染色体重塑", en:"chromatin remodeling"},
+    {cn:"组蛋白密码", en:"histone code"},
+    {cn:"乙酰化修饰", en:"acetylation"},
+    {cn:"去乙酰化修饰", en:"deacetylation"},
+    {cn:"甲基化修饰", en:"methylation"},
+    {cn:"赖氨酸", en:"lysine"},
+    {cn:"精氨酸", en:"arginine"},
+    {cn:"去甲基化", en:"demethylation"},
+    {cn:"泛素化修饰", en:"ubiquitination"},
+    {cn:"去泛素化", en:"de-ubiquitination"},
+    {cn:"蛋白精氨酸甲基转移酶", en:"PRMTs (protein arginine methyltransferases)"},
+    {cn:"印记效应", en:"imprinting"},
+    {cn:"基因组印记", en:"genomic imprinting"},
+    {cn:"父系印记", en:"paternal imprinting"},
+    {cn:"母系印记", en:"maternal imprinting"},
+    {cn:"亲源效应", en:"parent-of-origin effects"},
+    {cn:"低甲基化", en:"hypomethylation"},
+    {cn:"从头甲基化", en:"De novo methylation"},
+    {cn:"维持甲基化", en:"maintenance methylation"},
+    {cn:"DNA甲基转移酶家族", en:"Dnmts"},
+    {cn:"朊病毒", en:"Prions (proteinaceous infectious particle)"},
+    {cn:"跨代表观遗传效应", en:"transgenerational epigenetic effects"},
+    {cn:"自适应亲代效应", en:"adaptive parental effect"},
+    {cn:"X染色体失活", en:"X-inactivation"},
+    {cn:"胎盘哺乳动物", en:"placental mammals"},
+    {cn:"有袋动物", en:"marsupials"},
+    {cn:"同卵双胞胎", en:"monozygous twins"},
+    {cn:"温度依赖型性别决定", en:"TSD (temperature-dependent sex determination)"}
+];
+// =====================================================
+
+let nowMode = null; // cn普通中译英 / en普通英译中 / err错题模式
+let currentWord = null;
+let doneCount = 0;
+
+// 从本地存储读取错题，没有则初始化空数组
+function getErrorWords() {
+    const cache = localStorage.getItem("vocabErrList");
+    return cache ? JSON.parse(cache) : [];
+}
+// 保存错题到本地
+function saveErrorWords(errArr) {
+    localStorage.setItem("vocabErrList", JSON.stringify(errArr));
+}
+// 更新页面错题数量显示
+function refreshErrNum() {
+    document.getElementById("errCount").innerText = getErrorWords().length;
+}
+
+// 随机取一题
+function getRandomWord(sourceList) {
+    const randIdx = Math.floor(Math.random() * sourceList.length);
+    return sourceList[randIdx];
+}
+
+// 刷新当前题目
+function refreshQuestion() {
+    const tipDom = document.getElementById("ansTip");
+    tipDom.style.display = "none";
+    document.getElementById("userInput").value = "";
+
+    if(nowMode === "err") {
+        const errList = getErrorWords();
+        if(errList.length === 0) {
+            document.getElementById("qText").innerText = "暂无错题，先去普通模式刷题吧！";
+            currentWord = null;
+            return;
+        }
+        currentWord = getRandomWord(errList);
+    } else {
+        currentWord = getRandomWord(wordList);
+    }
+
+    if(nowMode === "cn") {
+        document.getElementById("qText").innerText = `【中译英】请翻译：${currentWord.cn}`;
+    } else if(nowMode === "en") {
+        document.getElementById("qText").innerText = `【英译中】请翻译：${currentWord.en}`;
+    } else if(nowMode === "err") {
+        // 错题自动匹配原本的翻译方向
+        const oriMode = currentWord._mode;
+        if(oriMode === "cn") {
+            document.getElementById("qText").innerText = `【错题｜中译英】${currentWord.cn}`;
+        } else {
+            document.getElementById("qText").innerText = `【错题｜英译中】${currentWord.en}`;
+        }
+    }
+}
+
+// 切换模式按钮
+document.getElementById("modeCn").onclick = () => {
+    nowMode = "cn";
+    doneCount = 0;
+    document.getElementById("doneCount").innerText = doneCount;
+    refreshQuestion();
+}
+document.getElementById("modeEn").onclick = () => {
+    nowMode = "en";
+    doneCount = 0;
+    document.getElementById("doneCount").innerText = doneCount;
+    refreshQuestion();
+}
+document.getElementById("errMode").onclick = () => {
+    nowMode = "err";
+    refreshQuestion();
+}
+
+// 核对答案
+document.getElementById("checkBtn").onclick = () => {
+    if(!currentWord) return;
+    const input = document.getElementById("userInput").value.trim();
+    let rightAns, isCorrect;
+    let oriMode = nowMode === "err" ? currentWord._mode : nowMode;
+
+    if(oriMode === "cn") {
+        rightAns = currentWord.en;
+        isCorrect = input.toLowerCase() === rightAns.toLowerCase();
+    } else {
+        rightAns = currentWord.cn;
+        isCorrect = input === rightAns;
+    }
+
+    const tipDom = document.getElementById("ansTip");
+    tipDom.style.display = "block";
+    if(isCorrect) {
+        tipDom.className = "ans-tip right";
+        tipDom.innerText = `回答正确！标准答案：${rightAns}`;
+        // 如果是错题模式答对，从错题库移除
+        if(nowMode === "err") {
+            let errList = getErrorWords();
+            errList = errList.filter(item => !(item.cn === currentWord.cn && item.en === currentWord.en));
+            saveErrorWords(errList);
+            refreshErrNum();
+        }
+    } else {
+        tipDom.className = "ans-tip wrong";
+        tipDom.innerText = `回答错误，标准答案：${rightAns}`;
+        // 答错存入错题（标记原刷题方向）
+        let errList = getErrorWords();
+        // 去重，避免重复存入同一词条
+        const exist = errList.some(item => item.cn === currentWord.cn && item.en === currentWord.en);
+        if(!exist) {
+            errList.push({...currentWord, _mode: oriMode});
+            saveErrorWords(errList);
+            refreshErrNum();
+        }
+    }
+}
+
+// 下一题
+document.getElementById("nextBtn").onclick = () => {
+    if(!nowMode) return;
+    if(nowMode !== "err") {
+        doneCount++;
+        document.getElementById("doneCount").innerText = doneCount;
+    }
+    refreshQuestion();
+}
+
+// 清空全部错题
+document.getElementById("clearErr").onclick = () => {
+    localStorage.removeItem("vocabErrList");
+    refreshErrNum();
+    alert("已清空所有错题记录");
+    if(nowMode === "err") refreshQuestion();
+}
+
+// 页面加载时刷新错题数量
+refreshErrNum();
+</script>
+</body>
+</html>
